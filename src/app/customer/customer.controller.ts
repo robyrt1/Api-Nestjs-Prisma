@@ -24,7 +24,7 @@ export class CustomerController {
 
   @Post()
   async createNew(@Body() body: CreateCustomerDto) {
-    const userId = 'c0912014-6997-4fea-a66a-cbbb6034c5bd';
+    const userId = '1e4fa6be-9426-43d2-b72a-edcf4f4d0f77';
     return this.customerService.createNew(body, userId);
   }
 

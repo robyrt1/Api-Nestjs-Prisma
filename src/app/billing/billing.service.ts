@@ -1,8 +1,8 @@
 import { UpdateBillingDto } from './dto/update-billing-dto';
 import { CreateBillingDto } from './dto/create-billing-dto';
+import { BillingStatusEnum } from './dto/billing.status.enun';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { fromEvent } from 'rxjs';
 @Injectable()
 export class BillingService {
   constructor(private readonly prismaService: PrismaService) {}
@@ -29,6 +29,7 @@ export class BillingService {
           status: true,
           value: true,
           dueDate: true,
+          customerId: true,
           createdAt: true,
         },
         where: { id, deletedAt: null },
@@ -41,15 +42,14 @@ export class BillingService {
   async createNew(data: CreateBillingDto, userId: string) {
     try {
       const { customerId, ...rest } = data;
-      const result = await this.prismaService.billing.create({
+      return await this.prismaService.billing.create({
         data: {
           ...rest,
-          status: '',
+          status: BillingStatusEnum.PENDING,
           customer: { connect: { id: customerId } },
           user: { connect: { id: userId } },
         },
       });
-      return result;
     } catch (err) {
       throw new BadRequestException(err.message);
     }
