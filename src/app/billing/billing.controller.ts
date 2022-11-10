@@ -15,6 +15,12 @@ import {
 @Controller('billing')
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
+
+  @Get('dashboard')
+  dashboard() {
+    return this.billingService.dashboard();
+  }
+
   @Get()
   async findAll() {
     return this.billingService.findAll();

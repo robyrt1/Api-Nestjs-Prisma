@@ -3,9 +3,48 @@ import { CreateBillingDto } from './dto/create-billing-dto';
 import { BillingStatusEnum } from './dto/billing.status.enun';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
+import { DateTime } from 'luxon';
+
 @Injectable()
 export class BillingService {
   constructor(private readonly prismaService: PrismaService) {}
+
+  async dashboard() {
+    const billings = await this.prismaService.billing.groupBy({
+      by: ['dueDate', 'status'],
+      _sum: { value: true },
+      where: { deletedAt: null },
+    });
+
+    const history = billings.map((billing) => ({
+      dueDate: DateTime.fromJSDate(billing.dueDate).toFormat('yyyy-MM-dd'),
+      value: Number(billing._sum.value),
+      status: billing.status,
+    }));
+
+    const pending = history
+      .filter(({ status }) => status === BillingStatusEnum.PENDING)
+      .reduce((total, current) => (total += current.value), 0);
+    const late = history
+      .filter(({ status }) => status === BillingStatusEnum.LATE)
+      .reduce((total, current) => (total += current.value), 0);
+    const paid = history
+      .filter(({ status }) => status === BillingStatusEnum.PAID)
+      .reduce((total, current) => (total += current.value), 0);
+
+    const customer = await this.prismaService.customer.count({
+      where: { deletedAt: null },
+    });
+
+    return {
+      customer,
+      pending,
+      late,
+      paid,
+      history,
+    };
+  }
+
   async findAll() {
     return this.prismaService.billing.findMany({
       select: {
