@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { genSaltSync, hashSync } from 'bcrypt';
+import { genSaltSync, hashSync, compareSync } from 'bcrypt';
 import { UpdateUserDto } from './dto/update.user.dto';
 
 @Injectable()
@@ -54,6 +54,25 @@ export class UserService {
     }
   }
 
+  async findOneByEmail(email: string) {
+    try {
+      return await this.prismaService.user.findFirstOrThrow({
+        select: {
+          id: true,
+          firsName: true,
+          lastName: true,
+          email: true,
+          password: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        where: { email, deletedAt: null },
+      });
+    } catch (err) {
+      throw new NotFoundException(err.message);
+    }
+  }
+
   async updateByid(id: string, data: UpdateUserDto) {
     const user = await this.prismaService.user.update({
       where: { id },
@@ -77,5 +96,9 @@ export class UserService {
   hashPassword(password: string) {
     const salt = genSaltSync(10);
     return hashSync(password, salt);
+  }
+
+  validatePassword(password: string, hash: string) {
+    return compareSync(password, hash);
   }
 }

@@ -1,3 +1,4 @@
+import { AuthGuard } from '@nestjs/passport';
 import { UpdateCustomerDto } from './dto/update-cusmtome.dto';
 import {
   Body,
@@ -10,6 +11,7 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-cusmtome.dto';
@@ -18,22 +20,25 @@ import { CreateCustomerDto } from './dto/create-cusmtome.dto';
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
   @Get()
+  @UseGuards(AuthGuard('jwt'))
   async fundAll() {
     return this.customerService.findAll();
   }
 
   @Post()
   async createNew(@Body() body: CreateCustomerDto) {
-    const userId = '1e4fa6be-9426-43d2-b72a-edcf4f4d0f77';
+    const userId = '7fa8938e-0310-4191-8759-e6296149e465';
     return this.customerService.createNew(body, userId);
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
   async findOneById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.customerService.findOneById(id);
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard('jwt'))
   async updateById(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() body: UpdateCustomerDto,
@@ -42,6 +47,7 @@ export class CustomerController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.customerService.deleteById(id);
